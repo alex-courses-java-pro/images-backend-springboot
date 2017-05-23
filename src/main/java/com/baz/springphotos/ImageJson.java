@@ -14,5 +14,5 @@ import lombok.Setter;
 @AllArgsConstructor
 public class ImageJson {
     private long id;
-    private String base64EcodedImage;
+    private String uri;
 }

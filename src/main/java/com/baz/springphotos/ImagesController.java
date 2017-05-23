@@ -52,35 +52,7 @@ public class ImagesController {
 
     private final String BASE_IMAGES_URL = "http://localhost:8080/images";
 
-    //private Map<Long, byte[]> images = new HashMap<>();
     private List<Image> images = new ArrayList<>();
-
-    /*@PostConstruct
-    private void init() {
-        //TODO: remove
-        try {
-            Path path = Paths.get(
-                    "/home/arahis/Pictures/green_power_wallpaper_by_rocan64-d3hifbd.jpg");
-            byte[] image = Files.readAllBytes(path);
-            long id = 1;
-            images.put(id, image);
-            //2nd imange
-            path = Paths.get(
-                    "/home/arahis/Pictures/39721762-power-wallpapers.png");
-            image = Files.readAllBytes(path);
-            id = 2;
-            images.put(id, image);
-            //3rd image
-            path = Paths.get(
-                    "/home/arahis/Pictures/27324811-power-wallpapers.jpg");
-            image = Files.readAllBytes(path);
-            id = 3;
-            images.put(id, image);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        //
-    }*/
 
     @PostConstruct
     private void init() {
@@ -144,23 +116,10 @@ public class ImagesController {
     }
 
     @RequestMapping(value = "/{id}",
-            method = RequestMethod.GET/*,
-            produces = MediaType.APPLICATION_JSON_VALUE*/)
+            method = RequestMethod.GET)
     public ResponseEntity getImageById(@PathVariable("id") long id) {
-        /*if (!images.containsKey(id)) {
-            return new ResponseEntity(HttpStatus.NOT_FOUND);
-        }
-
-        ImageJson imageJson = new ImageJson(id, encodeImage(images.get(id)));
-        return new ResponseEntity(imageJson, HttpStatus.OK);
-        */
         HttpHeaders headers = new HttpHeaders();
-        Image responseImage = null;
-        for (Image img : images) {
-            if (img.getId() == id) {
-                responseImage = img;
-            }
-        }
+        Image responseImage = findImg(id);
         if (responseImage == null) {
             return new ResponseEntity(HttpStatus.NOT_FOUND);
         }
@@ -170,15 +129,16 @@ public class ImagesController {
         return new ResponseEntity(responseImage.getBytes(), headers, HttpStatus.OK);
     }
 
-    /*@RequestMapping(method = RequestMethod.GET,
+
+    @RequestMapping(method = RequestMethod.GET,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity getAllImages() {
 
         List<ImageJson> allImages = new ArrayList<>();
 
-        for (Map.Entry<Long, byte[]> imageEntry : images.entrySet()) {
-            ImageJson img = new ImageJson(imageEntry.getKey(), encodeImage(imageEntry.getValue()));
-            allImages.add(img);
+        for (Image img : images) {
+            ImageJson imageJson = new ImageJson(img.getId(), img.getUri());
+            allImages.add(imageJson);
         }
 
         return new ResponseEntity(allImages, HttpStatus.OK);
@@ -186,27 +146,26 @@ public class ImagesController {
 
     @RequestMapping(method = RequestMethod.DELETE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity deleteImagesByIds(@RequestBody DeleteRequestJson deleteRequestJson) {
-        long[] idsToDelete = deleteRequestJson.getIds();
-        if (idsToDelete.length == 0) {
+    public ResponseEntity deleteImagesByIds(@RequestBody(required = true) long[] ids) {
+        if (ids.length == 0) {
             return new ResponseEntity(HttpStatus.BAD_REQUEST);
         }
-        removeImages(idsToDelete);
+        removeImages(ids);
 
         return new ResponseEntity(HttpStatus.OK);
     }
 
+
     @RequestMapping(value = "download/{format}",
-            method = RequestMethod.GET,
+            method = RequestMethod.POST,
             produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getImagesArchiveByIds(@PathVariable("format") String fileFormat,
                                                 @RequestBody(required = false) long[] ids) { //TODO: required = true
 
         //TODO:remove
-        Long[] fakeIds = images.keySet().toArray(new Long[images.size()]);
-        ids = new long[fakeIds.length];
-        for (int i = 0; i < fakeIds.length; i++) {
-            ids[i] = fakeIds[i];
+        ids = new long[images.size()];
+        for (int i = 0; i < ids.length; i++) {
+            ids[i] = images.get(i).getId();
         }
         //
 
@@ -225,13 +184,14 @@ public class ImagesController {
         }
     }
 
+
     private ByteArrayResource zipImages(long[] ids) throws IOException {
         OutputStream outputStream = new FileOutputStream("images.zip");
         ZipOutputStream zipOS = new ZipOutputStream(outputStream);
         for (int i = 0; i < ids.length; i++) {
             long imageId = ids[i];
             zipOS.putNextEntry(new ZipEntry("image" + imageId));
-            zipOS.write(images.get(imageId));
+            zipOS.write(findImg(imageId).getBytes());
             zipOS.closeEntry();
         }
         zipOS.finish();
@@ -241,17 +201,23 @@ public class ImagesController {
         return new ByteArrayResource(Files.readAllBytes(Paths.get("images.zip")));
     }
 
-    private String encodeImage(byte[] bytes) {
-        return new String(Base64.getEncoder().encode(bytes), StandardCharsets.UTF_8);
-    }
-
-    private byte[] decodeImage(String base64Image) {
-        return Base64.getDecoder().decode(base64Image);
-    }
-
     private void removeImages(long[] ids) {
-        for (int i = 0; i < ids.length; i++)
-            images.remove(ids[i]);
+        for (int i = 0; i < ids.length; i++) {
+            Image imgToRemove = findImg(ids[i]);
+            if (imgToRemove != null) {
+                images.remove(imgToRemove);
+            }
+        }
     }
-    */
+
+
+    private Image findImg(long id) {
+        Image image = null;
+        for (Image img : images) {
+            if (img.getId() == id) {
+                image = img;
+            }
+        }
+        return image;
+    }
 }
