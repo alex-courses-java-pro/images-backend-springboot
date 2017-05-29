@@ -54,7 +54,8 @@ public class ImagesController {
 
     private List<Image> images = new ArrayList<>(); // dao imitation
 
-    @PostConstruct
+    //autofilling with local images for test purpose
+    /*@PostConstruct
     private void init() {
         //TODO: remove
         try {
@@ -88,7 +89,7 @@ public class ImagesController {
             e.printStackTrace();
         }
         //
-    }
+    }*/
 
     @RequestMapping(method = RequestMethod.POST,
             produces = MediaType.APPLICATION_JSON_VALUE)
