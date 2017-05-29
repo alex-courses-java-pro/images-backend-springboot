@@ -18,7 +18,9 @@ public class SpringPhotosApplication {
 		return new WebMvcConfigurerAdapter() {
 			@Override
 			public void addCorsMappings(CorsRegistry registry) {
-				registry.addMapping("/**").allowedOrigins("http://localhost:4200");
+				registry.addMapping("/**")
+						.allowedMethods("POST","GET","DELETE")
+						.allowedOrigins("http://localhost:4200");
 			}
 		};
 	}

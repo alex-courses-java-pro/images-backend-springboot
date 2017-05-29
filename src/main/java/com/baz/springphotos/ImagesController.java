@@ -52,7 +52,7 @@ public class ImagesController {
 
     private final String BASE_IMAGES_URL = "http://localhost:8080/images";
 
-    private List<Image> images = new ArrayList<>();
+    private List<Image> images = new ArrayList<>(); // dao imitation
 
     @PostConstruct
     private void init() {
@@ -141,12 +141,13 @@ public class ImagesController {
             allImages.add(imageJson);
         }
 
-        return new ResponseEntity(allImages, HttpStatus.OK);
+        return new ResponseEntity(new ImagesJson(allImages), HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.DELETE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity deleteImagesByIds(@RequestBody(required = true) long[] ids) {
+
         if (ids.length == 0) {
             return new ResponseEntity(HttpStatus.BAD_REQUEST);
         }
@@ -160,14 +161,7 @@ public class ImagesController {
             method = RequestMethod.POST,
             produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getImagesArchiveByIds(@PathVariable("format") String fileFormat,
-                                                @RequestBody(required = false) long[] ids) { //TODO: required = true
-
-        //TODO:remove
-        ids = new long[images.size()];
-        for (int i = 0; i < ids.length; i++) {
-            ids[i] = images.get(i).getId();
-        }
-        //
+                                                @RequestBody(required = true) long[] ids) { //TODO: required = true
 
         if (!fileFormat.equals("zip")) {
             return new ResponseEntity(HttpStatus.NOT_IMPLEMENTED);
@@ -184,7 +178,7 @@ public class ImagesController {
         }
     }
 
-
+    // code below should be in service/logic layer, but our case is simplified
     private ByteArrayResource zipImages(long[] ids) throws IOException {
         OutputStream outputStream = new FileOutputStream("images.zip");
         ZipOutputStream zipOS = new ZipOutputStream(outputStream);
